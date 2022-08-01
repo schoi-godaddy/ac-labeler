@@ -8886,31 +8886,101 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+// Lib
 const core = __importStar(__nccwpck_require__(3934));
 const github = __importStar(__nccwpck_require__(76));
+// App
+const utils_1 = __nccwpck_require__(5114);
+const inputs_1 = __nccwpck_require__(9380);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const labelName = core.getInput("label");
-        console.log(labelName);
-        const time = new Date().toTimeString();
-        core.setOutput("time", time);
-        if (!process.env.GITHUB_TOKEN) {
-            throw new Error("GITHUB_TOKEN environment variable not found.");
-        }
-        const client = github.getOctokit(process.env.GITHUB_TOKEN);
         const contextPullRequest = github.context.payload.pull_request;
         if (!contextPullRequest) {
             throw new Error("This action can only be invoked in `pull_request_target` or `pull_request` events.");
         }
         const owner = contextPullRequest.base.user.login;
         const repo = contextPullRequest.base.repo.name;
-        console.log(contextPullRequest);
+        const body = (0, utils_1.breakdownBody)(contextPullRequest.body || "");
+        if (!process.env.GITHUB_TOKEN) {
+            throw new Error("GITHUB_TOKEN environment variable not found.");
+        }
+        const client = github.getOctokit(process.env.GITHUB_TOKEN);
+        const inputs = (0, inputs_1.getInputs)(core.getInput);
+        // await client.request(
+        //   "POST /repos/:owner/:repo/issues/:issue_number/comments",
+        //   {
+        //     owner,
+        //     repo,
+        //     issue_number: contextPullRequest.number,
+        //     body: `Hello 👋  `,
+        //   }
+        // );
+        console.log(inputs);
     }
     catch (error) {
-        core.setFailed(error);
+        core.setFailed(error.message);
     }
 });
 exports["default"] = run;
+
+
+/***/ }),
+
+/***/ 9380:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getInputs = void 0;
+const getInputs = (getInputFn) => {
+    const label = getInputFn("label", { required: true });
+    const minCompTaskCount = getInputFn("minCompletedTaskCount");
+    const minCompTaskPercentage = getInputFn("minCompletedTaskPercentage");
+    return {
+        label,
+        minCompletedTaskCount: parseInt(minCompTaskCount),
+        minCompletedTaskPercentage: parseInt(minCompTaskPercentage),
+    };
+};
+exports.getInputs = getInputs;
+
+
+/***/ }),
+
+/***/ 5114:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.breakdownBody = void 0;
+const breakdownBody = (body) => {
+    const todos = body.match(/\[.?\]/g) || [];
+    const total = todos.length;
+    let completed = 0;
+    let todo = 0;
+    let percentage = 100;
+    // https://docs.github.com/en/issues/tracking-your-work-with-issues/about-task-lists#creating-task-lists
+    todos.forEach((item) => {
+        if (item === "[x]") {
+            todo++;
+        }
+        else {
+            completed++;
+        }
+    });
+    if (total != 0) {
+        percentage = Math.round((completed / total) * 100);
+    }
+    return {
+        total,
+        todo,
+        completed,
+        percentage,
+    };
+};
+exports.breakdownBody = breakdownBody;
 
 
 /***/ }),

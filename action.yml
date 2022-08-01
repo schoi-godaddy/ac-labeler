@@ -2,9 +2,15 @@ name: ac-labeler
 author: '@schoi-godaddy'
 description: 'Labels based on AC met on a PR.'
 inputs:
-  label:  # id of input
-    description: 'label to add on PR'
+  label:
+    description: 'label to add on the PR if requirements are met.'
     required: true
+  minCompletedTaskCount:
+    description: '(Optional) Minimum "integer" number of Completed Task PR needs to contain.'
+    required: false
+  minCompletedTaskPercentage:
+    description: '(Optional) Minimum % "integer" of Completed Task PR needs to contain. If `minCompletedTaskCount` is set, this field is ignored.'
+    required: false
 outputs:
   time: # id of output
     description: 'The time we greeted you'
