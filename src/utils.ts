@@ -57,7 +57,7 @@ const parseBody = (body: string): BodyDetails => {
 
   // https://docs.github.com/en/issues/tracking-your-work-with-issues/about-task-lists#creating-task-lists
   todos.forEach((item) => {
-    if (item === "[x]") {
+    if (item === "[ ]") {
       todo++;
     } else {
       completed++;
