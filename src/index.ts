@@ -1,7 +1,5 @@
 import core from "@actions/core";
 import github from "@actions/github";
-import { WebhookPayload } from "@actions/github/lib/interfaces";
-import axios from "axios";
 
 const run = async () => {
   try {
