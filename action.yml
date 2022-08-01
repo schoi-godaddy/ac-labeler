@@ -1,0 +1,13 @@
+name: ac-labeler
+author: '@schoi-godaddy'
+description: 'Labels based on AC met on a PR.'
+inputs:
+  label:  # id of input
+    description: 'label to add on PR'
+    required: true
+outputs:
+  time: # id of output
+    description: 'The time we greeted you'
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
