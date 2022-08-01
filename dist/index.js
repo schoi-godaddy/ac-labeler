@@ -8901,6 +8901,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const owner = contextPullRequest.base.user.login;
         const repo = contextPullRequest.base.repo.name;
         const body = (0, utils_1.breakdownBody)(contextPullRequest.body || "");
+        console.log(body);
         if (!process.env.GITHUB_TOKEN) {
             throw new Error("GITHUB_TOKEN environment variable not found.");
         }
@@ -8939,8 +8940,8 @@ const getInputs = (getInputFn) => {
     const minCompTaskPercentage = getInputFn("minCompletedTaskPercentage");
     return {
         label,
-        minCompletedTaskCount: parseInt(minCompTaskCount),
-        minCompletedTaskPercentage: parseInt(minCompTaskPercentage),
+        minCompletedTaskCount: parseInt(minCompTaskCount) || -1,
+        minCompletedTaskPercentage: parseInt(minCompTaskPercentage) || -1,
     };
 };
 exports.getInputs = getInputs;

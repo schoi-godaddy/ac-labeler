@@ -15,7 +15,7 @@ export const getInputs = (
 
   return {
     label,
-    minCompletedTaskCount: parseInt(minCompTaskCount),
-    minCompletedTaskPercentage: parseInt(minCompTaskPercentage),
+    minCompletedTaskCount: parseInt(minCompTaskCount) || -1,
+    minCompletedTaskPercentage: parseInt(minCompTaskPercentage) || -1,
   };
 };

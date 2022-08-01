@@ -18,6 +18,8 @@ const run = async () => {
     const repo = contextPullRequest.base.repo.name;
     const body = breakdownBody(contextPullRequest.body || "");
 
+    console.log(body);
+
     if (!process.env.GITHUB_TOKEN) {
       throw new Error("GITHUB_TOKEN environment variable not found.");
     }
