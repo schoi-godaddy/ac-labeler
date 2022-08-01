@@ -34,6 +34,7 @@ export class OctoClient {
     this.octokit = oktoKitFn(process.env.GITHUB_TOKEN);
   }
 
+  // https://docs.github.com/en/rest/issues/labels#add-labels-to-an-issue
   postLabel(params: PostLabelParams): Promise<unknown> {
     return this.octokit.request(
       "POST /repos/:owner/:repo/issues/:issue_number/labels",
@@ -41,6 +42,7 @@ export class OctoClient {
     );
   }
 
+  // https://docs.github.com/en/rest/issues/comments#create-an-issue-comment
   postComment(params: PostCommentParams): Promise<unknown> {
     return this.octokit.request(
       "POST /repos/:owner/:repo/issues/:issue_number/comments",

@@ -8865,9 +8865,11 @@ class OctoClient {
         }
         this.octokit = oktoKitFn(process.env.GITHUB_TOKEN);
     }
+    // https://docs.github.com/en/rest/issues/labels#add-labels-to-an-issue
     postLabel(params) {
         return this.octokit.request("POST /repos/:owner/:repo/issues/:issue_number/labels", params);
     }
+    // https://docs.github.com/en/rest/issues/comments#create-an-issue-comment
     postComment(params) {
         return this.octokit.request("POST /repos/:owner/:repo/issues/:issue_number/comments", params);
     }
