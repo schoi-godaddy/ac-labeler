@@ -9002,6 +9002,7 @@ const parsePullRequestContext = (payload) => {
     const owner = contextPullRequest.base.user.login;
     const repo = contextPullRequest.base.repo.name;
     const bodyDetails = parseBody(contextPullRequest.body || "");
+    console.log("bodyDetails", bodyDetails);
     const issueNumber = contextPullRequest.number;
     return {
         owner,
