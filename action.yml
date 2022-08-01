@@ -12,8 +12,8 @@ inputs:
     description: '(Optional) Minimum % "integer" of Completed Task PR needs to contain. If `minCompletedTaskCount` is set, this field is ignored.'
     required: false
 outputs:
-  time: # id of output
-    description: 'The time we greeted you'
+  labelAdded: # id of output
+    description: 'If label was added or not.'
 runs:
   using: 'node16'
   main: 'dist/index.js'

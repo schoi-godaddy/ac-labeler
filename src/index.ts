@@ -3,40 +3,76 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 
 // App
-import { breakdownBody } from "./utils";
+import { parsePullRequestContext, PullRequestContext } from "./utils";
 import { getInputs, GitHubActionInputs } from "./inputs";
 
+/**
+ * Main application.
+ */
 const run = async () => {
   try {
-    const contextPullRequest = github.context.payload.pull_request;
-    if (!contextPullRequest) {
-      throw new Error(
-        "This action can only be invoked in `pull_request_target` or `pull_request` events."
-      );
-    }
-    const owner = contextPullRequest.base.user.login;
-    const repo = contextPullRequest.base.repo.name;
-    const body = breakdownBody(contextPullRequest.body || "");
-
-    console.log(body);
+    core.setOutput("labelAdded", false);
+    const actionInputs: GitHubActionInputs = getInputs(core.getInput);
+    const { owner, repo, issueNumber, body }: PullRequestContext =
+      parsePullRequestContext(github.context.payload);
 
     if (!process.env.GITHUB_TOKEN) {
       throw new Error("GITHUB_TOKEN environment variable not found.");
     }
-    const client = github.getOctokit(process.env.GITHUB_TOKEN);
-    const inputs: GitHubActionInputs = getInputs(core.getInput);
+    const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
-    // await client.request(
-    //   "POST /repos/:owner/:repo/issues/:issue_number/comments",
-    //   {
-    //     owner,
-    //     repo,
-    //     issue_number: contextPullRequest.number,
-    //     body: `Hello 👋  `,
-    //   }
-    // );
-
-    console.log(inputs);
+    // As per `action.yml` - If `minCompletedTaskCount` is not set,`minCompletedTaskPercentage` field is used.
+    if (actionInputs.minCompletedTaskCount < 0) {
+      if (body.percentCompleted >= actionInputs.minCompletedTaskPercentage) {
+        await octokit.request(
+          "POST /repos/:owner/:repo/issues/:issue_number/labels",
+          {
+            owner,
+            repo,
+            issue_number: issueNumber,
+            labels: [actionInputs.label],
+          }
+        );
+        core.setOutput("labelAdded", true);
+      } else {
+        await octokit.request(
+          "POST /repos/:owner/:repo/issues/:issue_number/comments",
+          {
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body:
+              `Hi 👋, this Pull Request did not meet the minimum ${actionInputs.minCompletedTaskPercentage}% completed tasks requirement with ${body.percentCompleted}%.` +
+              `Label ${actionInputs.label} was not added.`,
+          }
+        );
+      }
+    } else {
+      if (body.completed >= actionInputs.minCompletedTaskCount) {
+        await octokit.request(
+          "POST /repos/:owner/:repo/issues/:issue_number/labels",
+          {
+            owner,
+            repo,
+            issue_number: issueNumber,
+            labels: [actionInputs.label],
+          }
+        );
+        core.setOutput("labelAdded", true);
+      } else {
+        await octokit.request(
+          "POST /repos/:owner/:repo/issues/:issue_number/comments",
+          {
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body:
+              `Hi 👋, this Pull Request did not meet the minimum ${actionInputs.minCompletedTaskCount} completed tasks requirement with ${body.completed}.` +
+              `Label ${actionInputs.label} was not added.`,
+          }
+        );
+      }
+    }
   } catch (error: any) {
     core.setFailed(error.message);
   }

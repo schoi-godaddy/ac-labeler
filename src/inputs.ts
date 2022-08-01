@@ -6,6 +6,11 @@ export interface GitHubActionInputs {
   minCompletedTaskPercentage: number;
 }
 
+/**
+ * Get GitHub Action Inputs & parse into GitHubActionInputs object that can be used through out the app.
+ * @param getInputFn Function which returns value to get.
+ * @returns Parsed GitHubActionInputs.
+ */
 export const getInputs = (
   getInputFn: (name: string, options?: InputOptions) => string
 ): GitHubActionInputs => {

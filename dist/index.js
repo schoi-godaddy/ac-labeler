@@ -8892,31 +8892,59 @@ const github = __importStar(__nccwpck_require__(76));
 // App
 const utils_1 = __nccwpck_require__(5114);
 const inputs_1 = __nccwpck_require__(9380);
+/**
+ * Main application.
+ */
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const contextPullRequest = github.context.payload.pull_request;
-        if (!contextPullRequest) {
-            throw new Error("This action can only be invoked in `pull_request_target` or `pull_request` events.");
-        }
-        const owner = contextPullRequest.base.user.login;
-        const repo = contextPullRequest.base.repo.name;
-        const body = (0, utils_1.breakdownBody)(contextPullRequest.body || "");
-        console.log(body);
+        core.setOutput("labelAdded", false);
+        const actionInputs = (0, inputs_1.getInputs)(core.getInput);
+        const { owner, repo, issueNumber, body } = (0, utils_1.parsePullRequestContext)(github.context.payload);
         if (!process.env.GITHUB_TOKEN) {
             throw new Error("GITHUB_TOKEN environment variable not found.");
         }
-        const client = github.getOctokit(process.env.GITHUB_TOKEN);
-        const inputs = (0, inputs_1.getInputs)(core.getInput);
-        // await client.request(
-        //   "POST /repos/:owner/:repo/issues/:issue_number/comments",
-        //   {
-        //     owner,
-        //     repo,
-        //     issue_number: contextPullRequest.number,
-        //     body: `Hello 👋  `,
-        //   }
-        // );
-        console.log(inputs);
+        const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+        // As per `action.yml` - If `minCompletedTaskCount` is not set,`minCompletedTaskPercentage` field is used.
+        if (actionInputs.minCompletedTaskCount < 0) {
+            if (body.percentCompleted >= actionInputs.minCompletedTaskPercentage) {
+                yield octokit.request("POST /repos/:owner/:repo/issues/:issue_number/labels", {
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    labels: [actionInputs.label],
+                });
+                core.setOutput("labelAdded", true);
+            }
+            else {
+                yield octokit.request("POST /repos/:owner/:repo/issues/:issue_number/comments", {
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    body: `Hi 👋, this Pull Request did not meet the minimum ${actionInputs.minCompletedTaskPercentage}% completed tasks requirement with ${body.percentCompleted}%.` +
+                        `Label ${actionInputs.label} was not added.`,
+                });
+            }
+        }
+        else {
+            if (body.completed >= actionInputs.minCompletedTaskCount) {
+                yield octokit.request("POST /repos/:owner/:repo/issues/:issue_number/labels", {
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    labels: [actionInputs.label],
+                });
+                core.setOutput("labelAdded", true);
+            }
+            else {
+                yield octokit.request("POST /repos/:owner/:repo/issues/:issue_number/comments", {
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    body: `Hi 👋, this Pull Request did not meet the minimum ${actionInputs.minCompletedTaskCount} completed tasks requirement with ${body.completed}.` +
+                        `Label ${actionInputs.label} was not added.`,
+                });
+            }
+        }
     }
     catch (error) {
         core.setFailed(error.message);
@@ -8934,6 +8962,11 @@ exports["default"] = run;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getInputs = void 0;
+/**
+ * Get GitHub Action Inputs & parse into GitHubActionInputs object that can be used through out the app.
+ * @param getInputFn Function which returns value to get.
+ * @returns Parsed GitHubActionInputs.
+ */
 const getInputs = (getInputFn) => {
     const label = getInputFn("label", { required: true });
     const minCompTaskCount = getInputFn("minCompletedTaskCount");
@@ -8955,13 +8988,40 @@ exports.getInputs = getInputs;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.breakdownBody = void 0;
-const breakdownBody = (body) => {
+exports.parsePullRequestContext = void 0;
+/**
+ * Parse GitHub WebhookPayload to PullRequestContext object that can be used through out the app.
+ * @param payload Github WebhookPayload Object, expect to contain `pull_request` key/val.
+ * @returns PullRequestContext object, if not `pull_request` throws Error.
+ */
+const parsePullRequestContext = (payload) => {
+    const contextPullRequest = payload.pull_request;
+    if (!contextPullRequest) {
+        throw new Error("This action can only be invoked in `pull_request_target` or `pull_request` events.");
+    }
+    const owner = contextPullRequest.base.user.login;
+    const repo = contextPullRequest.base.repo.name;
+    const bodyDetails = parseBody(contextPullRequest.body || "");
+    const issueNumber = contextPullRequest.number;
+    return {
+        owner,
+        repo,
+        issueNumber,
+        body: bodyDetails,
+    };
+};
+exports.parsePullRequestContext = parsePullRequestContext;
+/**
+ * Parse body of string which may contain series of `[ ]` or `[x]`, then returns BodyDetails object that can be used through out the app.
+ * @param body Body of a Pull Request.
+ * @returns BodyDetails object containing detailed info about `[ ]` and/or `[x]` usage.
+ */
+const parseBody = (body) => {
     const todos = body.match(/\[.?\]/g) || [];
     const total = todos.length;
     let completed = 0;
     let todo = 0;
-    let percentage = 100;
+    let percentCompleted = 100;
     // https://docs.github.com/en/issues/tracking-your-work-with-issues/about-task-lists#creating-task-lists
     todos.forEach((item) => {
         if (item === "[x]") {
@@ -8972,16 +9032,15 @@ const breakdownBody = (body) => {
         }
     });
     if (total != 0) {
-        percentage = Math.round((completed / total) * 100);
+        percentCompleted = Math.round((completed / total) * 100);
     }
     return {
         total,
         todo,
         completed,
-        percentage,
+        percentCompleted,
     };
 };
-exports.breakdownBody = breakdownBody;
 
 
 /***/ }),
