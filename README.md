@@ -1,6 +1,6 @@
 # ac-labeler
 
-Labels based on AC met on a Pull Request (PR) type issue(s).
+An action to add Label based on [Acceptance Criterias (AC) or Task Lists](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-task-lists) met on a Pull Request (PR) type issue(s).
 
 Examples:
 
