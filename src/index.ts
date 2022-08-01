@@ -26,7 +26,7 @@ const run = async () => {
 
     console.log(contextPullRequest);
   } catch (error: any) {
-    core.setFailed(error.message);
+    core.setFailed(error);
   }
 };
 

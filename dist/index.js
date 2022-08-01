@@ -8887,7 +8887,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         console.log(contextPullRequest);
     }
     catch (error) {
-        core_1.default.setFailed(error.message);
+        core_1.default.setFailed(error);
     }
 });
 exports["default"] = run;
