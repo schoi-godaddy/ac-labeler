@@ -11,7 +11,7 @@ jobs:
     name: Label the PR
     runs-on: ubuntu-latest
     steps:
-      - uses: schoi-godaddy/ac-labler@feature/main-code
+      - uses: schoi-godaddy/ac-labeler@feature/main-code
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
